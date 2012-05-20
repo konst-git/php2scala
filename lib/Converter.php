@@ -8,13 +8,7 @@
  *
  */
 
-$file = $argv[1];
-$code = trim(file_get_contents($file));
-
-$conv = new PhpToScala();
-echo $conv->convert($argv[0], $code, $file);
-
-class PhpToScala {
+class Converter {
 
     function is_global($var) {
        return in_array($var, array('argv', '_GLOBALS', '_SERVER', '_SESSION', '_GET'));
@@ -637,5 +631,4 @@ EOF;
         }
     }
 }
-?>
 

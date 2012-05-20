@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * PHP-to-Scala source code migration helper.
  * See http://code.google.com/p/php-to-scala-migration-helper/ for details.
@@ -622,8 +622,8 @@ EOF;
     }
 
     function __construct() {
-        define(TTYPE, 0);
-        define(VALUE, 1);
+        define('TTYPE', 0);
+        define('VALUE', 1);
     }
 
     function dump($tokens) { // debugging function

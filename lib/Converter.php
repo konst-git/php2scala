@@ -622,11 +622,14 @@ class Converter {
 
     /**
      * @param string $code PHP code
+     * @return string convert result
      */
     public function convert( $code ){
         $T = token_get_all($code);
-        echo $this->scan_globals($T);
-        echo $this->parse_all($T);
+        $result = '';
+        $result .= $this->scan_globals($T);
+        $result .= $this->parse_all($T);
+        return $result;
     }
 
     function __construct() {

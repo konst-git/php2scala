@@ -9,6 +9,11 @@
  */
 
 class Converter {
+    /**
+     * object name for php functions
+     * @var string
+     */
+    private $phpLibName = 'php';
 
     function is_global($var) {
        return in_array($var, array('argv', '_GLOBALS', '_SERVER', '_SESSION', '_GET'));
@@ -272,7 +277,7 @@ class Converter {
 
     function parse_echo(&$T) {
         $t = array_shift($T);
-        return 'echo(' . $this->parse_expr_tail($T) . ')';
+        return $this->phpLibName . '.echo(' . $this->parse_expr_tail($T) . ')';
     }
 
     function parse_new(&$T) {

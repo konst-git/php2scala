@@ -639,6 +639,17 @@ EOF;
     function __construct() {
         define('TTYPE', 0);
         define('VALUE', 1);
+
+        $obsoleteTypeConstants = array(
+            'T_ML_COMMENT',
+            'T_OLD_FUNCTION',
+        );
+        $definedConstants = get_defined_constants();
+        foreach( $obsoleteTypeConstants as $name ){
+            if( !array_key_exists( $name, $definedConstants ) ){
+                define( $name, $name );
+            }
+        }
     }
 
     function dump($tokens) { // debugging function

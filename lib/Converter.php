@@ -474,6 +474,17 @@ class Converter {
                     return 'while (' . $this->parse_all($cond) . ')';
                 }
 
+            case T_STRING: #    "$a[a]"     string array index inside string
+                if( $t[VALUE] === 'self' || $t[VALUE] === 'parent' ){
+                    $this->skip( $T, T_WHITESPACE );
+                    $this->expect( $T, T_DOUBLE_COLON );
+                    $this->skip( $T, T_WHITESPACE );
+                    $var = $this->parse( $T );
+                    return 'this.' . $var;
+                }else{
+                    return $t[VALUE];
+                }
+
             case T_COMMENT: #   // or #, and /* */ in PHP 5     comments
             case T_ABSTRACT: #      abstract    Class Abstraction (available since PHP 5.0.0)
             case T_AND_EQUAL: #     &=  assignment operators
@@ -566,7 +577,6 @@ class Converter {
             case T_SR_EQUAL: #  >>=     assignment operators
             case T_START_HEREDOC: #     <<<     heredoc syntax
             case T_STATIC: #    static  variable scope
-            case T_STRING: #    "$a[a]"     string array index inside string
             case T_STRING_CAST: #   (string)    type-casting
             case T_STRING_VARNAME: #    "${a    complex variable parsed syntax
             case T_SWITCH: #    switch  switch

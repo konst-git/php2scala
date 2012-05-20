@@ -1,12 +1,11 @@
 <?php
 /*
  * PHP-to-Scala source code migration helper.
- * See http://code.google.com/p/php-to-scala-migration-helper/ for details.
  *
+ * Copyright(C) 2012 kbinani.
  * Copyright(C) 2010 Alex T. Ramos / Zigabyte Corporation.
  * COPYING is permitted under the terms of the GNU General Public License, v3.
  *
- * $Id: php-to-scala.php,v 1.14 2010-04-27 17:52:20 alex Exp $
  */
 
 $file = $argv[1];

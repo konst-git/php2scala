@@ -434,15 +434,27 @@ class Converter {
                 $var = $this->parse($T);
                 $this->expect($T, T_AS);
                 $this->skip($T, T_WHITESPACE);
-                $k = $this->parse($T);
-                $this->expect($T, T_DOUBLE_ARROW);
-                $this->skip($T, T_WHITESPACE);
-                $v = $this->parse($T);
+                $maybeKeyVariable = $this->parse($T);
+
+                $keyVariable = null;
+                $valueVariable = null;
+                if( $this->match( $T[1], T_DOUBLE_ARROW ) ){
+                    $this->expect($T, T_DOUBLE_ARROW);
+                    $this->skip($T, T_WHITESPACE);
+                    $keyVariable = $maybeKeyVariable;
+                    $valueVariable = $this->parse($T);
+                }else{
+                    $valueVariable = $maybeKeyVariable;
+                }
                 $this->expect($T, ')');
                 $this->skip($T, T_WHITESPACE);
                 $loop = $this->fetch_stmt($T);
 
-                return "$var.foreach{ ($k:ref,$v:ref) => " . $this->parse_all($loop) . " }";
+                if( is_null( $keyVariable ) ){
+                    return "$var.foreach{ ($valueVariable:ref) => " . $this->parse_all($loop) . " }";
+                }else{
+                    return "$var.foreach{ ($keyVariable:ref,$valueVariable:ref) => " . $this->parse_all($loop) . " }";
+                }
 
             case T_ARRAY: #     array()     array(), array syntax
                 $this->skip($T, '(');

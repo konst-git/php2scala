@@ -668,7 +668,7 @@ EOF;
         if( is_array( $token ) ){
             $result = 'Array' . PHP_EOL;
             $result .= '(' . PHP_EOL;
-            $result .= '    [0] => ' . $this->getTypeConstantName( $token[0] ) . PHP_EOL;
+            $result .= '    [0] => ' . token_name( $token[0] ) . PHP_EOL;
             $result .= '    [1] => ' . $token[1] . PHP_EOL;
             $result .= '    [2] => ' . $token[2] . PHP_EOL;
             $result .= ')' . PHP_EOL;
@@ -676,14 +676,5 @@ EOF;
         }else{
             print_r( $token );
         }
-    }
-
-    function getTypeConstantName( $type ){
-        foreach( get_defined_constants() as $name => $value ){
-            if( $value === $type ){
-                return $name;
-            }
-        }
-        return 'UNKNOWN';
     }
 }

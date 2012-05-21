@@ -465,7 +465,7 @@ class Converter {
                 $this->skip($T, '(');
                 $list = $this->fetch_expr($T, ')');
                 if($this->contains($list, T_DOUBLE_ARROW)) {
-                    return "array.map(" . $this->parse_all($list) . ")";
+                    return "php.array(" . $this->parse_all($list) . ")";
                 }
                 else {
                     return "array.list(" . $this->parse_all($list) . ")";
@@ -633,8 +633,12 @@ class Converter {
     }
 
     function __construct() {
-        define('TTYPE', 0);
-        define('VALUE', 1);
+        if( !defined( 'TTYPE' ) ){
+            define( 'TTYPE', 0 );
+        }
+        if( !defined( 'VALUE' ) ){
+            define( 'VALUE', 1 );
+        }
 
         $obsoleteTypeConstants = array(
             'T_ML_COMMENT',

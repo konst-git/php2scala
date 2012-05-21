@@ -21,4 +21,23 @@ CODE;
         $actual = $converter->convert( $code );
         $this->assertSame( $expected, $actual );
     }
+
+    /**
+     * @test
+     */
+    public function arrayTest(){
+        $converter = new Converter();
+        $code = <<<CODE
+<?php
+array( "foo" => "value", "bar" => 0, 1 => 1, 2 );
+
+CODE;
+
+        $expected = <<<CODE
+php.array( "foo" -> "value", "bar" -> 0, 1 -> 1, 2 );
+
+CODE;
+        $actual = $converter->convert( $code );
+        $this->assertSame( $expected, $actual );
+    }
 }

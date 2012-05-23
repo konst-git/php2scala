@@ -249,8 +249,11 @@ class Converter {
         return $out;
     }
 
-    function parse_function(&$T) {
-        $out = "def" . $this->parse_f_args($T);
+    function parse_function(&$T, $scope = '') {
+        if( $scope !== '' ){
+            $scope .= ' ';
+        }
+        $out = $scope . "def" . $this->parse_f_args($T);
         $this->expect($T, '{');
         $body = $this->fetch_block($T);
 
@@ -261,16 +264,32 @@ class Converter {
         return $out . '{' . $vars . "\n" . $this->parse_all($body) . '}';
     }
 
-    function parse_vars(&$T) {
+    function parse_vars(&$T, $scope = '') {
         $out = '';
+        if( $scope !== '' ){
+            $scope .= ' ';
+        }
         while($T[0] != ';') {
             if($T[0][TTYPE] == T_VARIABLE) {
-                $out .= "var " . $this->parse($T) . " = undef;\n";
+                $out .= $scope . 'var ' . $this->parse($T) . " = undef;";
             }
             else {
                 array_shift($T);
             }
         }
+        array_shift($T);
+        return $out;
+    }
+
+    function parse_const_vars( &$T, $scope = '' ){
+        $out = '';
+        if( $scope !== '' ){
+            $scope .= ' ';
+        }
+        while($T[0] != ';') {
+            $out .= $this->parse( $T );
+        }
+        $out = $scope . 'val ' . $out . ';';
         array_shift($T);
         return $out;
     }
@@ -298,27 +317,141 @@ class Converter {
         return $out;
     }
 
-    function parse_class(&$T) {
-        $this->skip($T, T_WHITESPACE);
-        $classname = $this->parse($T);
-        $out = "class $classname";
-
-        while($T[0] != '{') {
-            $out .= $this->parse($T);
-        }
-
-        $out .= ' extends obj ' . $this->parse($T);
-        $body = $this->fetch_block($T);
-
-        while(count($body)) {
-            if($this->match($body[0], T_FUNCTION) && $body[2][VALUE] == $classname) {
-                $out .= $this->parse_constructor($body);
-            }
-            else {
-                $out .= $this->parse($body);
+    /**
+     * remove a specified type token, found at first
+     */
+    function remove_first( &$T, $ttype ){
+        for( $i = 0; $i < count( $T ); $i++ ){
+            $t = $T[$i];
+            if( $t === $ttype || (is_array( $t ) && $t[TTYPE] === $ttype) ){
+                array_splice( $T, $i, 1 );
+                break;
             }
         }
-        return $out . "\n}\nobject $classname extends $classname;";
+    }
+
+    function peek_whitespace( &$T ){
+        $out = '';
+        while( $this->match( $T[0], T_WHITESPACE ) ){
+            $out .= $T[0][VALUE];
+            array_shift($T);
+        }
+        return $out;
+    }
+
+    function parse_class( &$T ){
+        $this->skip( $T, T_WHITESPACE );
+        $className = $this->parse( $T );
+
+        $classCode = "class $className";
+        while( $T[0] !== '{' ){
+            $classCode .= $this->parse( $T );
+        }
+        $classCode .= ' extends PHPObject ' . $this->parse( $T );
+        $objectCode = "object $className {";
+        $body = $this->fetch_block( $T );
+
+        while( count( $body ) ){
+            $isFunction = false;
+            $block = $this->fetch_var_or_function( $body, $isFunction );
+            if( count( $block ) === 0 ){
+                $out = $this->parse( $body );
+            }else{
+                if( $isConstant = $this->contains( $block, T_CONST ) ){
+                    $this->remove_first( $block, T_CONST );
+                }
+                if( $isStatic = $this->contains( $block, T_STATIC ) ){
+                    $this->remove_first( $block, T_STATIC );
+                }
+                if( $isPublic = $this->contains( $block, T_PUBLIC ) ){
+                    $this->remove_first( $block, T_PUBLIC );
+                }
+                if( $isPrivate = $this->contains( $block, T_PRIVATE ) ){
+                    $this->remove_first( $block, T_PRIVATE );
+                }
+                if( $isProtected = $this->contains( $block, T_PROTECTED ) ){
+                    $this->remove_first( $block, T_PROTECTED );
+                }
+
+                $scope = '';
+                if( $isPrivate ){
+                    $scope = 'private';
+                }else if( $isProtected ){
+                    $scope = 'protected';
+                }
+                if( $isFunction ){
+                    $out = $this->peek_whitespace( $block );
+                    $this->expect( $block, T_FUNCTION );
+                    $out .= $this->parse_function( $block, $scope );
+                    if( $isStatic || $isConstant ){
+                        $objectCode .= $out;
+                    }else{
+                        $classCode .= $out;
+                    }
+                }else{
+                    $out = $this->peek_whitespace( $block );
+                    if( $isConstant ){
+                        $out .= $this->parse_const_vars( $block, $scope );
+                    }else{
+                        $out .= $this->parse_vars( $block, $scope );
+                    }
+                    if( $isStatic || $isConstant ){
+                        $objectCode .= $out;
+                    }else{
+                        $classCode .= $out;
+                    }
+                }
+            }
+        }
+
+        $objectCode .= PHP_EOL . '}' . PHP_EOL;
+        $classCode .= PHP_EOL . '}' . PHP_EOL;
+
+        return $classCode . PHP_EOL . PHP_EOL . $objectCode . PHP_EOL;
+    }
+
+    private function fetch_var_or_function( &$T, &$isFunction ){
+        $nextFunctionIndex = $this->getNextFunctionIndex( $T );
+        $nextVarIndex = $this->getNextVarIndex( $T );
+        if( $nextFunctionIndex === PHP_INT_MAX && $nextVarIndex === PHP_INT_MAX ){
+            return array();
+        }
+        $result = array();
+        if( $nextFunctionIndex <= $nextVarIndex ){
+            $isFunction = true;
+            for( $i = 0; $i <= $nextFunctionIndex; $i++ ){
+                $result[] = array_shift( $T );
+            }
+            while( $T[0] !== '{' ){
+                $result[] = array_shift( $T );
+            }
+            $result[] = array_shift( $T );
+            $result = array_merge( $result, $this->fetch_block( $T ) );
+            $result[] = '}';
+        }else{
+            for( $i = 0; $i <= $nextVarIndex; $i++ ){
+                $result[] = array_shift( $T );
+            }
+        }
+        return $result;
+    }
+
+    private function getNextFunctionIndex( $T ){
+        for( $i = 0; $i < count( $T ); $i++ ){
+            if( $T[$i][TTYPE] === T_FUNCTION ){
+                return $i;
+            }
+        }
+        return PHP_INT_MAX;
+    }
+
+    private function getNextVarIndex( $T ){
+        for( $i = 0; $i < count( $T ); $i++ ){
+            if( $T[$i] === ';' ){
+                return $i;
+            }
+        }
+        return PHP_INT_MAX;
     }
 
     function parse(&$T) {
@@ -465,7 +598,7 @@ class Converter {
                 $this->skip($T, '(');
                 $list = $this->fetch_expr($T, ')');
                 if($this->contains($list, T_DOUBLE_ARROW)) {
-                    return "php.array(" . $this->parse_all($list) . ")";
+                    return $this->phpLibName . ".array(" . $this->parse_all($list) . ")";
                 }
                 else {
                     return "array.list(" . $this->parse_all($list) . ")";

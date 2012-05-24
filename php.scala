@@ -26,3 +26,6 @@ object php{
         return result
     }
 }
+
+trait PHPObject{
+}

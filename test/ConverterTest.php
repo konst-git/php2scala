@@ -4,6 +4,52 @@ require_once __DIR__ . '/../lib/Converter.php';
 
 class ConverterTest extends PHPUnit_Framework_TestCase{
     /**
+     *  @var Converter
+     */
+    var $converter = null;
+
+    /**
+     * in case class has only static or constant member
+     * @test
+     */
+    public function parseClassWithoutNonStatic(){
+        $phpCode = <<<PHP
+<?php
+class Foo{
+    public const FOO = 1;
+}
+PHP;
+        $expected = <<<SCALA
+object Foo {
+      val FOO = 1;
+}
+
+SCALA;
+        $this->assertSame( $expected, $this->converter->convert( $phpCode ) );
+    }
+
+    /**
+     * in case class has no static or constant member
+     * @test
+     */
+    public function parseClassWithoutStatic(){
+        $phpCode = <<<PHP
+<?php
+class Foo{
+    public \$foo;
+}
+PHP;
+        $expected = <<<SCALA
+class Foo extends PHPObject {
+     var foo : Any = null;
+}
+
+SCALA;
+        $converter = new Converter();
+        $this->assertSame( $expected, $converter->convert( $phpCode ) );
+    }
+
+    /**
      * @test
      */
     public function parseClass(){
@@ -45,8 +91,6 @@ class Foo extends PHPObject {
 
     }
 }
-
-
 object Foo {
       private var privateStaticField : Any = null;
       var publicStaticField : Any = null;
@@ -58,8 +102,11 @@ object Foo {
     }
 }
 
-
 SCALA;
         $this->assertSame( $expected, $actual );
+    }
+
+    protected function setUp(){
+        $this->converter = new Converter();
     }
 }

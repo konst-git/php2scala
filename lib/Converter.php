@@ -343,12 +343,15 @@ class Converter {
         $this->skip( $T, T_WHITESPACE );
         $className = $this->parse( $T );
 
-        $classCode = "class $className";
+        $classCodePrefix = "class $className";
         while( $T[0] !== '{' ){
-            $classCode .= $this->parse( $T );
+            $classCodePrefix .= $this->parse( $T );
         }
-        $classCode .= ' extends PHPObject ' . $this->parse( $T );
-        $objectCode = "object $className {";
+        $classCodePrefix .= ' extends PHPObject ' . $this->parse( $T );
+        $classCode = '';
+
+        $objectCodePrefix = "object $className {";
+        $objectCode = '';
         $body = $this->fetch_block( $T );
 
         while( count( $body ) ){
@@ -404,10 +407,14 @@ class Converter {
             }
         }
 
-        $objectCode .= PHP_EOL . '}' . PHP_EOL;
-        $classCode .= PHP_EOL . '}' . PHP_EOL;
-
-        return $classCode . PHP_EOL . PHP_EOL . $objectCode . PHP_EOL;
+        $result = '';
+        if( $classCode !== '' ){
+            $result .= $classCodePrefix . $classCode . PHP_EOL . '}' . PHP_EOL;
+        }
+        if( $objectCode !== '' ){
+            $result .= $objectCodePrefix . $objectCode . PHP_EOL . '}' . PHP_EOL;
+        }
+        return $result;
     }
 
     private function fetch_var_or_function( &$T, &$isFunction ){

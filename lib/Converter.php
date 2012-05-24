@@ -195,8 +195,8 @@ class Converter {
                     continue;
                 }
 
-                $type = 'ref';
-                $default = 'undef';
+                $type = 'Any';
+                $default = 'null';
 
                 $this->skip($T, T_WHITESPACE);
 
@@ -243,7 +243,7 @@ class Converter {
             $prev = $T[0];
             $out .= $this->parse($T);
             if($prev[TTYPE] == T_VARIABLE) {
-                $out .= ': ref';
+                $out .= ' : Any';
             }
         }
         return $out;
@@ -258,7 +258,7 @@ class Converter {
         $body = $this->fetch_block($T);
 
         if($this->contains($body, T_RETURN)) {
-            $out .= ': ref = ';
+            $out .= ' : Any = ';
         }
         $vars = $this->scan_vars($body);
         return $out . '{' . $vars . "\n" . $this->parse_all($body) . '}';
@@ -271,7 +271,7 @@ class Converter {
         }
         while($T[0] != ';') {
             if($T[0][TTYPE] == T_VARIABLE) {
-                $out .= $scope . 'var ' . $this->parse($T) . " = undef;";
+                $out .= $scope . 'var ' . $this->parse($T) . ' : Any = null;';
             }
             else {
                 array_shift($T);
@@ -311,7 +311,7 @@ class Converter {
         $out = 'def __construct ';
         $out.= $this->parse_f_args($T);
         $this->expect($T, '{');
-        $out .= ':ref = {';
+        $out .= ' : Any = {';
         $out .= $this->parse_block_tail($T);
         $out .= "\nthis;\n}";
         return $out;
@@ -589,9 +589,9 @@ class Converter {
                 $loop = $this->fetch_stmt($T);
 
                 if( is_null( $keyVariable ) ){
-                    return "$var.foreach{ ($valueVariable:ref) => " . $this->parse_all($loop) . " }";
+                    return "$var.foreach{ ($valueVariable : Any) => " . $this->parse_all($loop) . " }";
                 }else{
-                    return "$var.foreach{ ($keyVariable:ref,$valueVariable:ref) => " . $this->parse_all($loop) . " }";
+                    return "$var.foreach{ ($keyVariable : Any, $valueVariable : Any) => " . $this->parse_all($loop) . " }";
                 }
 
             case T_ARRAY: #     array()     array(), array syntax

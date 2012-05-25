@@ -1,3 +1,4 @@
+[![Build Status](https://secure.travis-ci.org/kbinani/php2scala.png)](http://travis-ci.org/kbinani/php2scala)
 # What is 'php2scala' ?
 
 * convert php code to scala.

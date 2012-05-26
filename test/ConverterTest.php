@@ -9,6 +9,24 @@ class ConverterTest extends PHPUnit_Framework_TestCase{
     var $converter = null;
 
     /**
+     * @test
+     */
+    public function parseClassWithExtends(){
+        $phpCode = <<<PHP
+<?php
+class ConcreteFoo extends AbstractFoo{
+}
+PHP;
+        $expected = <<<SCALA
+class ConcreteFoo extends AbstractFoo with PHPObject {
+}
+
+SCALA;
+        $actual = $this->converter->convert( $phpCode );
+        $this->assertSame( $expected, $actual );
+    }
+
+    /**
      * in case class has only static or constant member
      * @test
      */

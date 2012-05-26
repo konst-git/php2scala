@@ -344,10 +344,15 @@ class Converter {
         $className = $this->parse( $T );
 
         $classCodePrefix = "class $className";
+        $containsExtends = false;
         while( $T[0] !== '{' ){
-            $classCodePrefix .= $this->parse( $T );
+            $parsedToken = $this->parse( $T );
+            if( $parsedToken === 'extends' ){
+                $containsExtends = true;
+            }
+            $classCodePrefix .= $parsedToken;
         }
-        $classCodePrefix .= ' extends PHPObject ' . $this->parse( $T );
+        $classCodePrefix .= ' ' . ($containsExtends ? 'with' : 'extends') . ' PHPObject ' . $this->parse( $T );
         $classCode = '';
 
         $objectCodePrefix = "object $className {";

@@ -407,10 +407,7 @@ class Converter {
             }
         }
 
-        $result = '';
-        if( $classCode !== '' ){
-            $result .= $classCodePrefix . $classCode . PHP_EOL . '}' . PHP_EOL;
-        }
+        $result = $classCodePrefix . $classCode . PHP_EOL . '}' . PHP_EOL;
         if( $objectCode !== '' ){
             $result .= $objectCodePrefix . $objectCode . PHP_EOL . '}' . PHP_EOL;
         }

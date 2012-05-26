@@ -20,6 +20,8 @@ class Foo{
 }
 PHP;
         $expected = <<<SCALA
+class Foo extends PHPObject {
+}
 object Foo {
       val FOO = 1;
 }
@@ -45,8 +47,7 @@ class Foo extends PHPObject {
 }
 
 SCALA;
-        $converter = new Converter();
-        $this->assertSame( $expected, $converter->convert( $phpCode ) );
+        $this->assertSame( $expected, $this->converter->convert( $phpCode ) );
     }
 
     /**
@@ -74,8 +75,7 @@ class Foo{
     }
 }
 PHP;
-        $converter = new Converter();
-        $actual = $converter->convert( $phpCode );
+        $actual = $this->converter->convert( $phpCode );
         $expected = <<<SCALA
 class Foo extends PHPObject {
      private var privateField : Any = null;
